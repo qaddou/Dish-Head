@@ -1,0 +1,35 @@
+import asyncio, os
+from playwright.async_api import async_playwright
+URL = 'file://' + os.path.abspath('dist/index.html'); O='test/shots/'
+async def main():
+    async with async_playwright() as p:
+        b = await p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--autoplay-policy=no-user-gesture-required'])
+        pg = await b.new_page(viewport={'width': 960, 'height': 540}); errs=[]
+        pg.on('pageerror', lambda e: errs.append(str(e)))
+        await pg.goto(URL); await pg.wait_for_timeout(800); await pg.keyboard.press('KeyA'); await pg.wait_for_timeout(1200)
+        await pg.screenshot(path=O+'u_main.png')
+        await pg.evaluate("LO.go(()=>new LO.Stage({type:'boss',id:'pirate',diff:'normal',practice:true,inf:true}))")
+        await pg.wait_for_timeout(800); await pg.screenshot(path=O+'u_leader.png')
+        await pg.wait_for_timeout(1500); await pg.screenshot(path=O+'u_intro1.png')
+        await pg.wait_for_timeout(1500); await pg.screenshot(path=O+'u_intro2.png')
+        await pg.wait_for_timeout(1500)
+        await pg.evaluate("LO.scene.players[0].meter=5; LO.Save.d.load.sup='beam'; LO.scene.players[0].sup='beam'")
+        await pg.keyboard.press('KeyV'); await pg.wait_for_timeout(500); await pg.screenshot(path=O+'u_super.png')
+        await pg.evaluate("LO.Save.reset(); LO.setScene(new LO.Stage({type:'level',id:'hayride',diff:'normal',practice:true,inf:true}))"); await pg.wait_for_timeout(2500)
+        await pg.evaluate("(()=>{const s=LO.scene; s.camX=s.miniX-100; s.bounds={l:s.camX,r:s.camX+960}; for(const p of s.players){p.x=s.miniX+300; p.y=300;}})()")
+        await pg.wait_for_timeout(2500); await pg.screenshot(path=O+'u_mini.png')
+        await pg.keyboard.down('KeyX'); await pg.keyboard.down('KeyE'); await pg.keyboard.down('ArrowRight')
+        await pg.wait_for_timeout(3000); await pg.screenshot(path=O+'u_mini2.png')
+        print('mini hp', await pg.evaluate("LO.scene.mini && LO.scene.mini.hp"))
+        await pg.evaluate("LO.scene.damageTarget({kind:'enemy',ref:LO.scene.mini},999,null)"); await pg.wait_for_timeout(1500)
+        print('miniDone', await pg.evaluate("LO.scene.miniDone"))
+        for k in ['KeyX','KeyE','ArrowRight']: await pg.keyboard.up(k)
+        await pg.keyboard.down('ArrowRight'); await pg.wait_for_timeout(4000); await pg.keyboard.up('ArrowRight')
+        print('state', await pg.evaluate("LO.scene.constructor.name+' '+LO.scene.state"))
+        await pg.evaluate("LO.Save.d.coins=40; LO.Save.d.owned.weapons=['spark','spread','bomb']; LO.Save.d.worlds=3; LO.setScene(new LO.ShopScene(0))"); await pg.wait_for_timeout(900); await pg.screenshot(path=O+'u_shop.png')
+        await pg.evaluate("LO.setScene(new LO.EquipScene(()=>new LO.MainMenu()))"); await pg.wait_for_timeout(700); await pg.screenshot(path=O+'u_equip.png')
+        await pg.evaluate("LO.Save.d.ach={first:1,mini:1,shop:1}; LO.setScene(new LO.AchievementsScene(()=>new LO.MainMenu()))"); await pg.wait_for_timeout(1200); await pg.screenshot(path=O+'u_ach.png')
+        await pg.evaluate("LO.setScene(new LO.SettingsScene(()=>new LO.MainMenu()))"); await pg.wait_for_timeout(900); await pg.screenshot(path=O+'u_settings.png')
+        print('errors', errs)
+        await b.close()
+asyncio.run(main())
